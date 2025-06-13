@@ -20,6 +20,8 @@ return new class extends Migration
             $table->decimal('last_cost', 10, 2)->nullable();
             $table->timestamp('last_updated_at');
             $table->timestamps();
+
+            $table->unique('product_id');
         });
     }
 
