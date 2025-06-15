@@ -144,7 +144,7 @@ class AuthController extends Controller
         $user = $request->user();
 
         // Delete current token
-        $request->user()->currentAccesssToken()->delete();
+        $request->user()->currentAccessToken()->delete();
 
         // Create new token
         $token = $user->createAccessToken('pos-token');

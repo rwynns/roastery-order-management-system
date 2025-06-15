@@ -28,7 +28,7 @@ class OrderItem extends Model
     /**
      * Relationship: OrderItem belongs to Order
      */
-    public function order(): BelongTo
+    public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
     }
@@ -58,7 +58,7 @@ class OrderItem extends Model
         parent::boot();
 
         static::saving(function ($orderItem) {
-            $orderitem->calculateTotalPrice();
+            $orderItem->calculateTotalPrice();
         });
     }
 }

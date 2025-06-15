@@ -71,7 +71,7 @@ class Inventory extends Model
     {
         if ($this->available_stock >= $quantity) {
             $this->decrement('current_stock', $quantity);
-            $this->last_update_at = now();
+            $this->last_updated_at = now();
             $this->save();
             return true;
         }

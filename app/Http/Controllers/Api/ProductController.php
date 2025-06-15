@@ -16,7 +16,7 @@ class ProductController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Product::width(['category', 'inventory']);
+        $query = Product::with(['category', 'inventory']);
 
         // Search by name or SKU
         if ($request->has('search')) {
