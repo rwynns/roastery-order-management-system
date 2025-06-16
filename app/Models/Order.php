@@ -64,4 +64,97 @@ class Order extends Model
     {
         return $this->hasMany(Payment::class);
     }
+
+    /**
+     * Scope: Orders by Status
+     */
+    public function scopeByStatus($query, $status)
+    {
+        return $query->where('status', $status);
+    }
+
+    /**
+     * Scope : Completed orders
+     */
+    public function scopeCompleted($query)
+    {
+        return $query->where('status','completed');
+    }
+
+    /**
+     * Scope: Today's orders
+     */
+    public function scopeToday($query)
+    {
+        return $query->whereDate('created_at',today());
+    }
+
+    /**
+     * Generate unique order number
+     */
+    public static function generateOrderNumber(): String
+    {
+        $prefix = 'ORD';
+        $date = now()->format('Ymd');
+        $sequence = str_pad(Order::whereDate('created_at', today())->count() + 1, 4, '0', STR_PAD_LEFT);
+
+        return $prefix . $date . $sequence;
+    }
+    
+    /**
+     * Calculate order totals
+     */
+    public function calculateTotals()
+    {
+        $subtotal = $this->orderItems()->sum('total_price');
+        $taxAmount = $subtotal * 0.1; // 10% tax
+        $totalAmount = $subtotal + $taxAmount - $this->discount_amount;
+
+        $this->update([
+            'subtotal' => $subtotal,
+            'tax_amount' => $taxAmount,
+            'total_amount'=> $totalAmount
+        ]);
+    }
+
+    /**
+     * Get total paid amount
+     */
+    public function getTotalPaidAttribute()
+    {
+        return $this->payment()->where('status', 'completed')->sum('amount');
+    }
+
+    /**
+     * Get remaining amount to be paid
+     */
+    public function getRemainingAmountAttribute()
+    {
+        return $this->total_amount - $this->total_paid;
+    }
+
+    /**
+     * Check if order is fully paid
+     */
+    public function isFullyPaid(): bool
+    {
+        return $this->remaining_amount <= 0;
+    }
+
+    /**
+     * Mark order as completed
+     */
+    public function markAsCompleted()
+    {
+        $this->update([
+            'status' => 'completed',
+            'payment_status' => 'paid',
+            'completed_at' => now()
+        ]);
+
+        //Update customer statistics
+        if ($this->customer){
+            $this->customer->updateStatistics();
+        }
+    }
 }
