@@ -39,7 +39,7 @@ class StoreProductRequest extends FormRequest
     /**
      * Get custom messages for validator errors.
      */
-    public function message(): array
+    public function messages(): array
     {
         return [
             'name.required' => 'Product name is required',

@@ -27,6 +27,38 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('customers', CustomerController::class);
     Route::apiResource('orders', OrderController::class);
 
+    // Custom order routes
+    Route::post('orders/{order}/payments', [OrderController::class, 'addPayment']);
+    Route::get('orders-analytics', [OrderController::class, 'analytics']);
+
+    // Custom customer routes
+    Route::get('customers-analytics', [CustomerController::class, 'analytics']);
+    Route::get('customers/{customer}/order-history', [CustomerController::class, 'orderHistory']);
+    Route::post('customers/bulk-status', [CustomerController::class, 'bulkUpdateStatus']);
+    Route::get('customers-export', [CustomerController::class, 'export']);
+
+    // Inventory routes
+    Route::apiResource('inventories', InventoryController::class);
+    
+    // Custom inventory routes
+    Route::get('inventories-analytics', [InventoryController::class, 'analytics']);
+    Route::get('inventories-low-stock', [InventoryController::class, 'lowStock']);
+    Route::get('inventories-out-of-stock', [InventoryController::class, 'outOfStock']);
+    Route::post('inventories-stock-adjustment', [InventoryController::class, 'stockAdjustment']);
+    Route::post('inventories-bulk-adjustment', [InventoryController::class, 'bulkStockAdjustment']);
+    Route::get('inventories-export', [InventoryController::class, 'export']);
+
+        // Report routes
+    Route::prefix('reports')->group(function () {
+        Route::get('sales', [ReportController::class, 'salesReport']);
+        Route::get('inventory', [ReportController::class, 'inventoryReport']);
+        Route::get('customers', [ReportController::class, 'customerReport']);
+        Route::get('financial', [ReportController::class, 'financialReport']);
+        Route::get('product-performance', [ReportController::class, 'productPerformanceReport']);
+        Route::post('export', [ReportController::class, 'exportReport']);
+    });
+
+
     // Custom routes
     Route::post('orders/{order}/payments', [OrderController::class, 'addPayment']);
     Route::get('reports/sales', [ReportController::class, 'salesReport']);

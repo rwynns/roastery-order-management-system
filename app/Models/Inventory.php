@@ -47,7 +47,8 @@ class Inventory extends Model
     public function scopeLowStock($query)
     {
         return $query->whereHas('product', function($q){
-            $q->whereRaw('inventory.current_stock <= products.min_stock_leves');
+            
+            $q->whereRaw('inventories.current_stock<= products.min_stock_level');
         });
     }
 

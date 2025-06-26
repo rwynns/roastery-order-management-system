@@ -3,8 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class StoreCustomerRequest extends FormRequest
+class UpdateCustomerRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -12,7 +13,7 @@ class StoreCustomerRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
-        // return $this->user()->hasPermission('customers.create');
+        // return $this->user()->hasPermission('customers.update');
     }
 
     /**
@@ -22,9 +23,16 @@ class StoreCustomerRequest extends FormRequest
      */
     public function rules(): array
     {
+        $customer = $this->route('customer');
+
         return [
             'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255|unique:customers,email',
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                Rule::unique('customers', 'email')->ignore($customer->id)
+            ],
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'date_of_birth' => 'nullable|date|before:today',

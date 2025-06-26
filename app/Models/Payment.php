@@ -21,7 +21,7 @@ class Payment extends Model
         'paid_at'
     ];
 
-    protected $cast = [
+    protected $casts = [
         'amount' => 'decimal:2',
         'change_amount' => 'decimal:2',
         'paid_at' => 'datetime'
