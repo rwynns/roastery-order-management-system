@@ -61,6 +61,29 @@ Route::middleware('web.auth')->group(function () {
         Route::get('/inventory', [WebReportController::class, 'inventory'])->name('inventory');
         Route::get('/customers', [WebReportController::class, 'customers'])->name('customers');
     });
+
+    // Additional CRUD routes for Products
+    Route::post('products', [WebProductController::class, 'store'])->name('products.store');
+    Route::put('products/{id}', [WebProductController::class, 'update'])->name('products.update');
+    Route::delete('products/{id}', [WebProductController::class, 'destroy'])->name('products.destroy');
+
+    // Additional CRUD routes for Customers
+    Route::post('customers', [WebCustomerController::class, 'store'])->name('customers.store');
+    Route::put('customers/{id}', [WebCustomerController::class, 'update'])->name('customers.update');
+    Route::delete('customers/{id}', [WebCustomerController::class, 'destroy'])->name('customers.destroy');
+
+    // Additional CRUD routes for Orders
+    Route::post('orders', [WebOrderController::class, 'store'])->name('orders.store');
+    Route::put('orders/{id}', [WebOrderController::class, 'update'])->name('orders.update');
+    Route::delete('orders/{id}', [WebOrderController::class, 'destroy'])->name('orders.destroy');
+    Route::post('orders/{id}/payments', [WebOrderController::class, 'addPayment'])->name('orders.add-payment');
+
+    // Inventory Adjustment routes
+    Route::post('inventory/adjustment', [WebInventoryController::class, 'adjustment'])->name('inventory.adjustment');
+    Route::post('inventory/bulk-adjustment', [WebInventoryController::class, 'bulkAdjustment'])->name('inventory.bulk-adjustment');
+
+    // Report Export
+    Route::post('reports/export', [WebReportController::class, 'export'])->name('reports.export');
     
     // POS/Cashier Interface
     Route::get('/pos', [WebOrderController::class, 'pos'])->name('pos');
