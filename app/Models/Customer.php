@@ -20,13 +20,15 @@ class Customer extends Model
         'gender',
         'total_spent',
         'total_orders',
+        'last_order_at',
         'is_active'
     ];
 
-    protected $cast = [
+    protected $casts = [
         'date_of_birth' => 'date',
         'total_spent' => 'decimal:2',
         'total_orders' => 'integer',
+        'last_order_at' => 'datetime',
         'is_active' => 'boolean'
     ];
 
@@ -63,7 +65,8 @@ class Customer extends Model
 
         $this->update([
             'total_orders' => $completedOrders->count(),
-            'total_spent' => $completedOrders->sum('total_amount')
+            'total_spent' => $completedOrders->sum('total_amount'),
+            'last_order_at' => $completedOrders->isNotEmpty() ? $completedOrders->first()->created_at : null
         ]);
     }
 
@@ -77,9 +80,38 @@ class Customer extends Model
         } elseif ($this->total_spent >= 500000){
             return 'Gold';
         } elseif ($this->total_spent >= 100000){
-            return 'silver';
+            return 'Silver';
         }
         
         return 'Regular';
+    }
+
+    /**
+     * Get customer purchase frequency per month
+     */
+    public function getPurchaseFrequencyAttribute()
+    {
+        if ($this->total_orders == 0) {
+            return 0;
+        }
+
+        $firstOrder = $this->orders()->oldest()->first();
+        if (!$firstOrder){
+            return 0;
+        }
+
+        $monthsSinceFirst = now()->diffInMonths($firstOrder->created_at) +1;
+        return round($this->total_orders / $monthsSinceFirst, 2);
+    }
+
+    /**
+     * Get average order value
+     */
+    public function getAverageOrderValueAttribute()
+    {
+        if ($this->total_orders == 0) {
+            return 0;
+        }
+        return round($this->total_spent / $this->total_orders, 2);
     }
 }

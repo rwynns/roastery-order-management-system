@@ -19,7 +19,7 @@ class OrderItem extends Model
         'notes'
     ];
 
-    protected $cast = [
+    protected $casts = [
         'quantity' => 'integer',
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',

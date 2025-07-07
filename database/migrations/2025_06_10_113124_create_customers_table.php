@@ -14,13 +14,14 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
+            $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
             $table->date('date_of_birth')->nullable();
             $table->enum('gender', ['male', 'female', 'other'])->nullable();
             $table->decimal('total_spent', 10, 2)->default(0);
             $table->integer('total_orders')->default(0);
+            $table->timestamp('last_order_at')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

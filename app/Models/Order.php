@@ -25,7 +25,7 @@ class Order extends Model
         'completed_at',
     ];
 
-    protected $cast = [
+    protected $casts = [
         'subtotal' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
@@ -38,7 +38,7 @@ class Order extends Model
      */
     public function customer(): BelongsTo
     {
-        return $this->belonsTo(Customer::class);
+        return $this->belongsTo(Customer::class);
     }
 
     /**
@@ -50,7 +50,7 @@ class Order extends Model
     }
 
     /**
-     * Relationship Order has many OrderItems
+     * Relationship: Order has many OrderItems
      */
     public function orderItems(): HasMany
     {
@@ -60,61 +60,9 @@ class Order extends Model
     /**
      * Relationship: Order has many Payments
      */
-    public function payments():  HasMany
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
-    }
-
-    /**
-     * Scope: Orders by Status
-     */
-    public function scopeByStatus($query, $status)
-    {
-        return $query->where('status', $status);
-    }
-
-    /**
-     * Scope : Completed orders
-     */
-    public function scopeCompleted($query)
-    {
-        return $query->where('status','completed');
-    }
-
-    /**
-     * Scope: Today's orders
-     */
-    public function scopeToday($query)
-    {
-        return $query->whereDate('created_at',today());
-    }
-
-    /**
-     * Generate unique order number
-     */
-    public static function generateOrderNumber(): String
-    {
-        $prefix = 'ORD';
-        $date = now()->format('Ymd');
-        $sequence = str_pad(Order::whereDate('created_at', today())->count() + 1, 4, '0', STR_PAD_LEFT);
-
-        return $prefix . $date . $sequence;
-    }
-    
-    /**
-     * Calculate order totals
-     */
-    public function calculateTotals()
-    {
-        $subtotal = $this->orderItems()->sum('total_price');
-        $taxAmount = $subtotal * 0.1; // 10% tax
-        $totalAmount = $subtotal + $taxAmount - $this->discount_amount;
-
-        $this->update([
-            'subtotal' => $subtotal,
-            'tax_amount' => $taxAmount,
-            'total_amount'=> $totalAmount
-        ]);
     }
 
     /**
@@ -122,7 +70,7 @@ class Order extends Model
      */
     public function getTotalPaidAttribute()
     {
-        return $this->payment()->where('status', 'completed')->sum('amount');
+        return $this->payments()->where('status', 'completed')->sum('amount');
     }
 
     /**
@@ -130,31 +78,67 @@ class Order extends Model
      */
     public function getRemainingAmountAttribute()
     {
-        return $this->total_amount - $this->total_paid;
+        return max(0, $this->total_amount - $this->total_paid);
     }
 
     /**
      * Check if order is fully paid
      */
-    public function isFullyPaid(): bool
+    public function getIsFullyPaidAttribute()
     {
         return $this->remaining_amount <= 0;
     }
 
     /**
-     * Mark order as completed
+     * Scope: Only completed orders
      */
-    public function markAsCompleted()
+    public function scopeCompleted($query)
     {
-        $this->update([
-            'status' => 'completed',
-            'payment_status' => 'paid',
-            'completed_at' => now()
-        ]);
+        return $query->where('status', 'completed');
+    }
 
-        //Update customer statistics
-        if ($this->customer){
-            $this->customer->updateStatistics();
-        }
+    /**
+     * Scope: Only pending orders
+     */
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    /**
+     * Scope: Orders from today
+     */
+    public function scopeToday($query)
+    {
+        return $query->whereDate('created_at', today());
+    }
+
+    /**
+     * Scope: Orders from this month
+     */
+    public function scopeThisMonth($query)
+    {
+        return $query->whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year);
+    }
+
+    /**
+     * Get profit for this order
+     */
+    public function getProfitAttribute()
+    {
+        $totalCost = $this->orderItems->sum(function ($item) {
+            return $item->quantity * ($item->product->cost ?? 0);
+        });
+
+        return $this->total_amount - $totalCost;
+    }
+
+    /**
+     * Get formatted order number
+     */
+    public function getFormattedOrderNumberAttribute()
+    {
+        return '#' . $this->order_number;
     }
 }

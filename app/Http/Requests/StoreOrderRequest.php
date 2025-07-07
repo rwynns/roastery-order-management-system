@@ -11,7 +11,8 @@ class StoreOrderRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
+        // return $this->user()->hasPermission('orders.create');
     }
 
     /**
@@ -22,17 +23,16 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'sku' => 'required|string|max:255|unique:products,sku',
-            'price' => 'required|numeric|min:0',
-            'cost' => 'nullable|numeric|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'image' => 'nullable|string',
-            'is_active' => 'boolean',
-            'track_stock' => 'boolean',
-            'min_stock_level' => 'integer|min:0',
-            'initial_stock' => 'integer|min:0'
+            'customer_id' => 'nullable|exists:customers,id',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'tax_rate' => 'nullable|numeric|min:0|max:100',
+            'notes' => 'nullable|string|max:1000',
+            'payment_method' => 'nullable|string|in:cash,card,transfer,ewallet',
+            'amount_paid' => 'nullable|numeric|min:0'
         ];
     }
 
@@ -42,12 +42,26 @@ class StoreOrderRequest extends FormRequest
     public function message(): array
     {
         return [
-            'name.required' => 'Product name is required',
-            'sku.required' => 'SKU is required',
-            'sku.unique' => 'SKU alredy exists',
-            'price.required' => 'Price is required',
-            'category_id.required' => 'Category is required',
-            'category_id.exists' => 'Selected category does not exist'
+            'items.required' => 'Order items are required',
+            'items.min' => 'At least one item is required',
+            'items.*.product_id.required' => 'Product is required for each item',
+            'items.*.product_id.exists' => 'Selected product does not exist',
+            'items.*.quantity.required' => 'Quantity is required for each item',
+            'items.*.quantity.min' => 'Quantity must be at least 1',
+            'items.*.unit_price.required' => 'Unit price is required for each item',
+            'customer_id.exists' => 'Selected customer does not exist',
+            'payment_method.in' => 'Invalid payment method'
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation()
+    {
+        // Auto-calculate tax if not provided
+        if (!$this->has('tax_rate')) {
+            $this->merge(['tax_rate' => config('pos.default_tax_rate', 10)]);
+        }
     }
 }
